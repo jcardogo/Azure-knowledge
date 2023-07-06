@@ -1,0 +1,1 @@
+to ssh the azure VM: ssh -i C:\Users\Alejandro\Projects\Azure\acardoso1_key.pem acardoso@4.205.77.175
