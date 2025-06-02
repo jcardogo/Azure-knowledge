@@ -16,12 +16,12 @@ az configure --defaults group={name of your resource grup} #set the default reso
 
 #Deploy ARM template
 ##Create a depoyment group to deploy the ARM template   
-templateFile="azuredeploy.json" #path to the ARM template file
-today=$(date +"%d-%b-%Y") #format the date to use in the deployment name
-DeploymentName="blanktemplate-"$today #name of the deployment
-az deployment group create \ 
-    --name $DeploymentName \
-    --template-file $templateFile \ 
+templateFile="azuredeploy.json"
+today=$(date +"%d-%b-%Y")
+DeploymentName="blanktemplate2-"$today
+
+az deployment group create --name $DeploymentName --template-file $templateFile
+
 ##
 templateFile="azuredeploy.json" #path to the ARM template file
 az deployment group create \
