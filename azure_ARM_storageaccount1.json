@@ -9,8 +9,11 @@
         {
             "type": "Microsoft.Storage/storageAccounts",
             "apiVersion": "2023-05-01",
-            "name": "learntemplatestorage123",
-            "location": "westus",
+            "name": "storageaccount1",
+            "tags":{
+                "displayName": "storageaccount1"
+            },
+            "location": "[resourceGroup().location]",
             "sku": {
                 "name": "Standard_LRS"
             },

@@ -3,12 +3,25 @@ az vm list-skus --location westus --output table #list all available VM sizes in
 az vm list-skus --location westus --output table | grep DS #list all available VM sizes in the westus region that start with DS
 az vm list-skus --location westus --output table | grep DS.*_v2 #list all available VM sizes in the westus region that start with DS and end with _v2
 
-#Deploy ARM template
+#Subscriotion management
 az login #login to azure
+##list all subscriptions and filter by name
+az account list \
+    --refresh --query "[?contains(name, 'Concierge Subscription')].id" \
+    --output table 
+az account set --subscription "Concierge Subscription" #set the subscription to use
+##Resource group management
+az group list --output table #list all resource groups in the current subscription
+az configure --defaults group={name of your resource grup} #set the default resource group to use
+
+#Deploy ARM template
 ##Create a depoyment group to deploy the ARM template   
+templateFile="azuredeploy.json" #path to the ARM template file
+today=$(date +"%d-%b-%Y") #format the date to use in the deployment name
+DeploymentName="blanktemplate-"$today #name of the deployment
 az deployment group create \ 
-    --name {name of your resource grup} \
-    --location westus 
+    --name $DeploymentName \
+    --template-file $templateFile \ 
 ##
 templateFile="azuredeploy.json" #path to the ARM template file
 az deployment group create \
