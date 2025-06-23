@@ -1,0 +1,58 @@
+trigger:
+  - main  # or your preferred branch
+
+pool:
+  name: Default  # make sure this matches your self-hosted agent pool name
+
+variables:
+  AWS_REGION: us-east-1 
+  ECR_REPO: your-ecr-repo-name
+  IMAGE_TAG: $(Build.BuildId)
+  CLUSTER_NAME: your-cluster-name
+  K8S_NAMESPACE: default
+  HELM_RELEASE: prometheus-stack
+
+stages:
+  - stage: Checkout
+    jobs:
+      - job: CheckoutCode
+        steps:
+          - checkout: self
+          - script: echo "✅ Code pulled from GitHub"
+
+  - stage: BuildAndPush
+    jobs:
+      - job: BuildPushImage
+        steps:
+          - script: |
+              echo "🔧 Logging into ECR"
+              aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin <your-account-id>.dkr.ecr.$(AWS_REGION).amazonaws.com
+
+              echo "🐍 Building Docker image"
+              docker build -t $(ECR_REPO):$(IMAGE_TAG) .
+
+              echo "🚀 Pushing to ECR"
+              docker tag $(ECR_REPO):$(IMAGE_TAG) <your-account-id>.dkr.ecr.$(AWS_REGION).amazonaws.com/$(ECR_REPO):$(IMAGE_TAG)
+              docker push <your-account-id>.dkr.ecr.$(AWS_REGION).amazonaws.com/$(ECR_REPO):$(IMAGE_TAG)
+
+  - stage: DeployToEKS
+    jobs:
+      - job: DeployApp
+        steps:
+          - script: |
+              echo "🧭 Updating kubeconfig"
+              aws eks update-kubeconfig --region $(AWS_REGION) --name $(CLUSTER_NAME)
+
+              echo "📦 Deploying app to EKS"
+              kubectl set image deployment/your-deployment-name your-container=$(ECR_REPO):$(IMAGE_TAG) -n $(K8S_NAMESPACE)
+              kubectl rollout status deployment/your-deployment-name -n $(K8S_NAMESPACE)
+
+  - stage: InstallPrometheus
+    jobs:
+      - job: HelmInstall
+        steps:
+          - script: |
+              echo "📊 Installing Prometheus stack via Helm"
+              helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+              helm repo update
+              helm upgrade --install $(HELM_RELEASE) prometheus-community/kube-prometheus-stack -n monitoring --create-namespace
